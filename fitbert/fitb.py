@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import torch
 from pytorch_pretrained_bert import BertForMaskedLM, tokenization
@@ -9,6 +9,7 @@ from fitbert.utils import sort_first_by_second
 
 class FitBert:
     def __init__(self, model=None, tokenizer=None, model_name="bert-large-uncased"):
+        self.mask_token = "***mask***"
         self.delemmatizer = Delemmatizer()
         print("using model:", model_name)
         if not model:
@@ -60,6 +61,10 @@ class FitBert:
                     options.append(w)
         return options
 
+    def mask(self, s: str, span: Tuple[int, int]) -> Tuple[str, str]:
+        subs = s[span[0] : span[1]]
+        return s.replace(subs, self.mask_token), subs
+
     def rank(
         self, sent: str, options: List[str], delemmatize: bool = False
     ) -> List[str]:
@@ -75,4 +80,9 @@ class FitBert:
         ranked = self.rank(sent, options, delemmatize)
         best_word = ranked[0]
         return sent.replace("***mask***", best_word)
+
+    def mask_fitb(self, sent: str, span: Tuple[int, int]) -> str:
+        masked_str, replaced = self.mask(sent, span)
+        options = [replaced]
+        return self.fitb(masked_str, options, delemmatize=True)
 

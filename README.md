@@ -2,7 +2,7 @@
 
 ![buff bert](https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/8dbae12a-4088-4550-a059-36a63be1532c/dauvov6-670a232d-4d64-47e6-a662-4fdc18d003ce.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzhkYmFlMTJhLTQwODgtNDU1MC1hMDU5LTM2YTYzYmUxNTMyY1wvZGF1dm92Ni02NzBhMjMyZC00ZDY0LTQ3ZTYtYTY2Mi00ZmRjMThkMDAzY2UucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.XPgC9GT93k_AWVSwSL7a9TTJNWcdO-LgrlK4dIoXn_8)
 
-FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https://arxiv.org/abs/1810.04805) to fill in the blank(s) in a section of text from a list of options. Here is the imagined usecase for FitBert:
+FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https://arxiv.org/abs/1810.04805) to fill in the blank(s) in a section of text from a list of options. Here is the envisioned usecase for FitBert:
 
 1. A service (statistical model or something simpler) suggests replacements/corrections for a segment of text
 2. That service is specialized to a domain, and isn't good at the big picture, e.g. grammar
@@ -11,7 +11,7 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 
 ## Installation
 
-...
+We need to decide if this is going to be open source, and if so, get it on PyPi.
 
 ## Usage
 
@@ -59,4 +59,34 @@ If you are already using `pytorch_pretrained_bert.BertForMaskedLM`, you can pass
 BLM = pytorch_pretrained_bert.BertForMaskedLM.from_pretrained(model_name)
 
 fb = FitBert(model=BLM)
+```
+
+You can also have FitBert mask the string for you
+
+```python
+from fitbert import FitBert
+
+
+fb = FitBert()
+
+unmasked_string = "Why Bert, you're looks handsome today!"
+span_to_mask = (17, 22)
+masked_string, masked = fb.mask(unmasked_string, span_to_mask)
+# >>> "Why Bert, you're ***mask*** handsome today!", 'looks'
+
+# you can set options = [masked] or use any List[str]
+options = [masked]
+
+filled_in = fb.fitb(masked_string, options=options)
+# >>> "Why Bert, you're looking handsome today!"
+```
+
+and there is a convenience method for doing this:
+
+```python
+unmasked_string = "Why Bert, you're looks handsome today!"
+span_to_mask = (17, 22)
+
+filled_in = fb.mask_fitb(unmasked_string, span_to_mask)
+# >>> "Why Bert, you're looking handsome today!"
 ```
