@@ -1,15 +1,17 @@
-from typing import Dict, List, Tuple
+from collections import defaultdict
+from typing import Dict, List, Tuple, Union, overload
 
 import torch
 from pytorch_pretrained_bert import BertForMaskedLM, tokenization
 
 from fitbert.delemmatize import Delemmatizer
-from fitbert.utils import sort_first_by_second
+from fitbert.utils import mask as _mask
 
 
 class FitBert:
+    mask_token = "***mask***"
+
     def __init__(self, model=None, tokenizer=None, model_name="bert-large-uncased"):
-        self.mask_token = "***mask***"
         self.delemmatizer = Delemmatizer()
         print("using model:", model_name)
         if not model:
@@ -22,36 +24,70 @@ class FitBert:
             self.tokenizer = tokenizer
         self.bert.eval()
 
-    def _get_probs_for_words(self, sent: str, words: List[str]):
+    @staticmethod
+    def mask(s: str, span: Tuple[int, int]) -> Tuple[str, str]:
+        return _mask(s, span, mask_token=FitBert.mask_token)
+
+    def _get_probs_for_words(self, sent: str, words: List[str], agg=max):
         """
-        Thanks, Yoav (don't worry, it's Apache2 licensed)
-        idea from
+        idea from (don't worry, it's Apache2 licensed)
         https://github.com/yoavg/bert-syntax/blob/master/eval_bert.py
         but modified for list of words
 
-        PLAN
-        THIS ONLY WORKS IF ALL WORDS ARE ONE BERT TOKEN
-        NEED TO FIX
+        also useful,
+        https://stackoverflow.com/questions/54978443/predicting-missing-words-in-a-sentence-natural-language-processing-model
+
+        @TODO this is not optimized! It loops instead of batching, forgive me, Tensor Gods!
         """
-        pre, target, post = sent.split("***")
-        if "mask" in target.lower():
-            target = ["[MASK]"]
-        else:
-            target = self.tokenizer.tokenize(target)
-        tokens = ["[CLS]"] + self.tokenizer.tokenize(pre)
-        target_idx = len(tokens)
-        tokens += target + self.tokenizer.tokenize(post) + ["[SEP]"]
-        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-        try:
-            # this line only works if a word == one token
-            word_ids = self.tokenizer.convert_tokens_to_ids(words)
-        except KeyError:
-            print("couldn't convert tokens to IDs, ", words)
-            return None
-        tens = torch.LongTensor(input_ids).unsqueeze(0)
-        res = self.bert(tens)[0, target_idx]
-        scores = res[word_ids]
-        return [float(x) for x in scores]
+        option_2_token_count: Dict[str, int] = defaultdict(int)
+        for word in words:
+            toks = self.tokenizer.tokenize(word)
+            option_2_token_count[word] += len(toks)
+
+        token_count_2_option: Dict[int, List[str]] = defaultdict(list)
+        for k, v in option_2_token_count.items():
+            token_count_2_option[v].append(k)
+
+        final_scores: Dict[str, List[float]] = {}
+        for tok_len, options_of_given_length in token_count_2_option.items():
+
+            pre, target_s, post = sent.split("***")
+            if "mask" in target_s.lower():
+                target = ["[MASK]"] * tok_len
+            else:
+                # not sure how to get here, but it was in the original
+                target = self.tokenizer.tokenize(target_s)
+
+            tokens = ["[CLS]"] + self.tokenizer.tokenize(pre)
+            target_idx = len(tokens)
+            tokens += target + self.tokenizer.tokenize(post) + ["[SEP]"]
+            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+            for option in options_of_given_length:
+                try:
+                    toks = self.tokenizer.tokenize(option)
+                    tok_ids = self.tokenizer.convert_tokens_to_ids(toks)
+                except KeyError:
+                    print("couldn't convert tokens to IDs, ", toks)
+                    return None
+                tens = torch.LongTensor(input_ids).unsqueeze(0)
+
+                # don't need gradients at inference time, thank god
+                # speeds things up considerably
+                with torch.no_grad():
+                    pred = self.bert(tens)
+                scores = []
+                for i in range(tok_len):
+                    res = pred[0, target_idx + i]
+                    # to explain the res[tok_ids] syntax:
+                    # >>> a = torch.tensor([1.0, 1.1, 1.2, 1.3])
+                    # >>> a[[1,2]]
+                    # tensor([1.1000, 1.2000])
+                    score = float(res[tok_ids[i]].item())
+                    scores.append(score)
+                # should we sum scores? max? pool? something else?
+                # currently defaulting to max
+                final_scores[option] = agg(scores)
+        return final_scores
 
     def _delemmatize_options(self, options: List[str]) -> List[str]:
         for word in options:
@@ -61,10 +97,6 @@ class FitBert:
                     options.append(w)
         return options
 
-    def mask(self, s: str, span: Tuple[int, int]) -> Tuple[str, str]:
-        subs = s[span[0] : span[1]]
-        return s.replace(subs, self.mask_token), subs
-
     def rank(
         self, sent: str, options: List[str], delemmatize: bool = False
     ) -> List[str]:
@@ -72,9 +104,9 @@ class FitBert:
             delemmatize = True
         if delemmatize:
             options = self._delemmatize_options(options)
-        scores = self._get_probs_for_words(sent, options)
-        ranked = sort_first_by_second(options, scores)
-        return ranked
+        scored = self._get_probs_for_words(sent, options)
+        ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)
+        return list(list(zip(*ranked))[0])
 
     def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
         ranked = self.rank(sent, options, delemmatize)
