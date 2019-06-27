@@ -15,6 +15,8 @@ We need to decide if this is going to be open source, and if so, get it on PyPi.
 
 ## Usage
 
+### Server
+
 ```python
 from fitbert import FitBert
 
@@ -90,3 +92,37 @@ span_to_mask = (17, 22)
 filled_in = fb.mask_fitb(unmasked_string, span_to_mask)
 # >>> "Why Bert, you're looking handsome today!"
 ```
+
+### Client
+
+If you are sending strings to a FitBert server, you need to either mask the string yourself, or identify the span you want masked:
+
+```python
+from fitbert import FitBert
+
+s = "This might be justified as a means of signalling the connection between drunken driving and fatal accidents."
+
+better_string, span_to_change = MyRuleBasedNLPModel.remove_overly_fancy_language(s)
+
+assert better_string == "This might be justified to signalling the connection between drunken driving and fatal accidents.", "Notice 'as a means of' became 'to', but we didn't re-conjuagte signalling, or fix the spelling mistake"
+
+assert span_to_change == (27, 37), "This span is the start and stop of the characters for the substring 'signalling'."
+
+masked_string, replaced_substring = FitBert.mask(better_string, span_to_change)
+
+assert masked_string == "This might be justified to ***mask*** the connection between drunken driving and fatal accidents."
+
+assert replaced_substring == "signalling"
+
+FitBertServer.fitb(masked_string, options=[replaced_substring])
+```
+
+The benefit to doing this over masking yourself is that if the internally used masking token changes, you don't have to know about that. However, you could also write your `CallFitBertServer` function to take an unmasked string and a span, something like:
+
+```python
+FitBertServer.mask_fitb(better_string, span_to_change)
+```
+
+## Development
+
+Run tests with `python -m pytest` or `python -m pytest -m "not slow"` to skip the 20 seconds of loading pretrained bert.
