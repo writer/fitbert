@@ -117,11 +117,15 @@ assert replaced_substring == "signalling"
 FitBertServer.fitb(masked_string, options=[replaced_substring])
 ```
 
-The benefit to doing this over masking yourself is that if the internally used masking token changes, you don't have to know about that. However, you could also write your `CallFitBertServer` function to take an unmasked string and a span, something like:
+The benefit to doing this over masking yourself is that if the internally used masking token changes, you don't have to know about that. Also, you don't need to make an instance of FitBert, so you don't have to incur the cost of downloading a pretrained Bert model.
+
+However, you could also write your `CallFitBertServer` function to take an unmasked string and a span, something like:
 
 ```python
 FitBertServer.mask_fitb(better_string, span_to_change)
 ```
+
+And then not need to install `FitBert` in your client at all.
 
 ## Development
 
