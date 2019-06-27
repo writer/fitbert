@@ -34,12 +34,14 @@ class Delemmatizer:
     def __call__(self, word: str) -> List[str]:
         try:
             delems = Delemmatizer.REVERSE_LOOKUP[word]
+            delems.append(word)
         except KeyError:
             delems = [word]
         if len(delems) <= 1:
             try:
                 word = Delemmatizer.LOOKUP[word]
                 delems = Delemmatizer.REVERSE_LOOKUP[word]
+                delems.append(word)
             except KeyError:
                 pass
         return delems
