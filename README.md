@@ -11,7 +11,7 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 
 ## Installation
 
-This software is currently unlicensed. If you do not work at Qordoba, you are not able to legally use it. However, we are working to make it available, probably under Apache 2.0. It will be available as a PyPi package.
+**This software is currently unlicensed. If you do not work at Qordoba, you are not able to legally use it.** However, we are working to make it available, probably under Apache 2.0. It will be available as a PyPi package.
 
 ## Usage
 
@@ -130,3 +130,7 @@ And then not need to install `FitBert` in your client at all.
 ## Development
 
 Run tests with `python -m pytest` or `python -m pytest -m "not slow"` to skip the 20 seconds of loading pretrained bert.
+
+### Acknowledgement
+
+I am trying to get in touch with [NodoBird](https://drawception.com/player/546330/nodo-bird/), the artist of the fantastic portrait of Bert depicted above.
