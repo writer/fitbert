@@ -11,7 +11,7 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 
 ## Installation
 
-We need to decide if this is going to be open source, and if so, get it on PyPi.
+This software is currently unlicensed. If you do not work at Qordoba, you are not able to legally use it. However, we are working to make it available, probably under Apache 2.0. It will be available as a PyPi package.
 
 ## Usage
 
