@@ -6,7 +6,7 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 
 1. A service (statistical model or something simpler) suggests replacements/corrections for a segment of text
 2. That service is specialized to a domain, and isn't good at the big picture, e.g. grammar
-3. That service passes the segment of text, with the words to be replaced identified, and the lsit of suggestions
+3. That service passes the segment of text, with the words to be replaced identified, and the list of suggestions
 4. FitBert _crushes_ all but the best suggestion :muscle:
 
 ## Installation
