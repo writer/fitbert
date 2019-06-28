@@ -1,6 +1,6 @@
 # FitBERT
 
-![buff bert](https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/8dbae12a-4088-4550-a059-36a63be1532c/dauvov6-670a232d-4d64-47e6-a662-4fdc18d003ce.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzhkYmFlMTJhLTQwODgtNDU1MC1hMDU5LTM2YTYzYmUxNTMyY1wvZGF1dm92Ni02NzBhMjMyZC00ZDY0LTQ3ZTYtYTY2Mi00ZmRjMThkMDAzY2UucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.XPgC9GT93k_AWVSwSL7a9TTJNWcdO-LgrlK4dIoXn_8)
+![buff bert](img/fitbert.png)
 
 FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https://arxiv.org/abs/1810.04805) to fill in the blank(s) in a section of text from a list of options. Here is the envisioned usecase for FitBert:
 
