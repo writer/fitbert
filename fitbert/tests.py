@@ -1,7 +1,8 @@
+import json
+
 import pytest
-
+from fitbert import FitBert
 from fitbert.delemmatize import Delemmatizer
-
 
 dl = Delemmatizer()
 
@@ -32,9 +33,7 @@ def test_delemmatizes_non_lemmas():
     ], "should delemmatize non-lemmas"
 
 
-from fitbert import FitBert
-
-
+"""
 def test_masker_works_without_instantiating():
     masked_string, masked = FitBert.mask(
         "This might be justified to signalling the connection between drunken driving and fatal accidents.",
@@ -42,9 +41,30 @@ def test_masker_works_without_instantiating():
     )
     assert FitBert.mask_token in masked_string, "It should mask using the mask token"
     assert masked == "signalling", "It should mask the write substring"
+"""
 
 
 @pytest.mark.slow
-def test_fitb_initializes():
+def test_ranking():
     fb = FitBert()
     assert callable(fb.fitb)
+
+    sentences = [
+                    "When she started talking about her ex-boyfriends, he looked like a ***mask*** out of water",
+                    "The boy was warned that if he misbehaved in the class, he would have to pay ***mask***.",
+                    "I am surprised that you have ***mask*** patience.",
+                ]
+
+    options =   [
+                    ["frog", "fish"],
+                    ["the drummer", "the flutist", "the piper"],
+                    ["such a", "so", "such"],
+                ]
+    answers =   [
+                    "fish",
+                    "the piper",
+                    "such",
+                ]
+    for sentence, option, answer in zip(sentences, options, answers):
+        ranked_options = fb.rank_multi(sentence, option)
+        assert ranked_options[0] == answer, "It should rank options"
