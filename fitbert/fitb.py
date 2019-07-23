@@ -4,16 +4,20 @@ from functools import reduce
 from typing import Dict, List, Tuple, Union, overload
 
 import torch
-from pytorch_pretrained_bert import BertForMaskedLM, tokenization
-
 from fitbert.delemmatize import Delemmatizer
 from fitbert.utils import mask as _mask
+from pytorch_pretrained_bert import BertForMaskedLM, tokenization
 
 
 class FitBert:
-    mask_token = "***mask***"
-
-    def __init__(self, model=None, tokenizer=None, model_name="bert-large-uncased"):
+    def __init__(
+        self,
+        model=None,
+        tokenizer=None,
+        model_name="bert-large-uncased",
+        mask_token="***mask***",
+    ):
+        self.mask_token = mask_token
         self.delemmatizer = Delemmatizer()
         print("using model:", model_name)
         if not model:
@@ -27,12 +31,15 @@ class FitBert:
         self.bert.eval()
 
     @staticmethod
-    def softmax(x): 
+    def softmax(x):
         return x.exp() / (x.exp().sum(-1)).unsqueeze(-1)
 
     @staticmethod
-    def mask(s: str, span: Tuple[int, int]) -> Tuple[str, str]:
-        return _mask(s, span, mask_token=FitBert.mask_token)
+    def is_multi_word(options: List[str]) -> bool:
+        return True in [len(option.split()) > 1 for option in options]
+
+    def mask(self, s: str, span: Tuple[int, int]) -> Tuple[str, str]:
+        return _mask(s, span, mask_token=self.mask_token)
 
     def _get_probs_for_words(self, sent: str, words: List[str]):
         """
@@ -91,8 +98,6 @@ class FitBert:
                     # >>> a[[1,2]]
                     # tensor([1.1000, 1.2000])
                     scores.append(score)
-                # should we sum scores? max? pool? something else?
-                # currently defaulting to max
                 final_scores[option] = reduce(operator.mul, scores, 1)
         return final_scores
 
@@ -118,10 +123,66 @@ class FitBert:
     def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
         ranked = self.rank(sent, options, delemmatize)
         best_word = ranked[0]
-        return sent.replace("***mask***", best_word)
+        return sent.replace(self.mask_token, best_word)
 
     def mask_fitb(self, sent: str, span: Tuple[int, int]) -> str:
         masked_str, replaced = self.mask(sent, span)
         options = [replaced]
         return self.fitb(masked_str, options, delemmatize=True)
 
+    def get_sentence_options(self, sent: str, options: List[str]) -> List[str]:
+        sentence_options = []
+        for option in options:
+            sentence_option = sent.replace(self.mask_token, option)
+            sentence_options.append(sentence_option)
+        return sentence_options
+
+    def get_sentence_score(self, sent: str) -> float:
+        sentence_prob = []
+        words = sent.split()
+        # remove and rememebr the ending sign
+        end_sign = words[-1][-1]
+        words[-1] = words[-1][:-1]
+        for i, word in enumerate(words):
+            masked_words = words[:]
+            masked_words[i] = self.mask_token
+            masked_sentence = " ".join(masked_words) + end_sign
+            prob_dict = self._get_probs_for_words(masked_sentence, [word])
+            sentence_prob.append(prob_dict[word])
+        return reduce(operator.mul, sentence_prob, 1)
+
+    def sentence_prob_to_rank(self, sent: str, options: List[str]) -> List[str]:
+        sentence_options = self.get_sentence_options(sent, options)
+        opt_probs = []
+        for option, sentence_option in zip(options, sentence_options):
+            sentence_prob = self.get_sentence_score(sentence_option)
+            opt_probs.append([option, sentence_prob])
+        opt_probs = sorted(opt_probs, key=lambda x: x[1], reverse=True)
+        ranked = [e[0] for e in opt_probs]
+        return ranked
+
+    def simplify_options(self, sent: str, options: List[str]):
+        min_option_len = min([len(o.split()) for o in options])
+        last_word = ""
+        first_word = ""
+        if min_option_len > 1:
+            # check if last or first common:
+            if len(set([o.split()[-1] for o in options])) == 1:
+                last_word = options[0].split()[-1]
+                options = [" ".join(o.split()[:-1]) for o in options]
+                sent = sent.replace(self.mask_token, " ".join([self.mask_token, last_word]))
+            elif len(set([o.split()[0] for o in options])) == 1:
+                first_word = options[0].split()[0]
+                options = [" ".join(o.split()[1:]) for o in options]
+                sent = sent.replace(self.mask_token, " ".join([first_word, self.mask_token]))
+        return options, sent, first_word, last_word
+
+    def rank_multi(self, sent: str, options: List[str]) -> List[str]:
+        ranked_options = []
+        if self.is_multi_word(options):
+            options, sent, first_word, last_word = self.simplify_options(sent, options)
+            ranked_options = self.sentence_prob_to_rank(sent, options)
+            ranked_options = [" ".join([first_word, r, last_word]).strip() for r in ranked_options]
+        else:
+            ranked_options = self.rank(sent, options=options)
+        return ranked_options
