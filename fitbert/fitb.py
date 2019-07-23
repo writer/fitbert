@@ -1,4 +1,6 @@
+import operator
 from collections import defaultdict
+from functools import reduce
 from typing import Dict, List, Tuple, Union, overload
 
 import torch
@@ -25,10 +27,14 @@ class FitBert:
         self.bert.eval()
 
     @staticmethod
+    def softmax(x): 
+        return x.exp() / (x.exp().sum(-1)).unsqueeze(-1)
+
+    @staticmethod
     def mask(s: str, span: Tuple[int, int]) -> Tuple[str, str]:
         return _mask(s, span, mask_token=FitBert.mask_token)
 
-    def _get_probs_for_words(self, sent: str, words: List[str], agg=max):
+    def _get_probs_for_words(self, sent: str, words: List[str]):
         """
         idea from (don't worry, it's Apache2 licensed)
         https://github.com/yoavg/bert-syntax/blob/master/eval_bert.py
@@ -78,15 +84,16 @@ class FitBert:
                 scores = []
                 for i in range(tok_len):
                     res = pred[0, target_idx + i]
+                    prob = self.softmax(res)
+                    score = float(prob[tok_ids[i]].item())
                     # to explain the res[tok_ids] syntax:
                     # >>> a = torch.tensor([1.0, 1.1, 1.2, 1.3])
                     # >>> a[[1,2]]
                     # tensor([1.1000, 1.2000])
-                    score = float(res[tok_ids[i]].item())
                     scores.append(score)
                 # should we sum scores? max? pool? something else?
                 # currently defaulting to max
-                final_scores[option] = agg(scores)
+                final_scores[option] = reduce(operator.mul, scores, 1)
         return final_scores
 
     def _delemmatize_options(self, options: List[str]) -> List[str]:
