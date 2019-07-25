@@ -1,6 +1,6 @@
 #!/bin/bash
 
-deploy ()
+release ()
 {
     VERSION=`cat VERSION`
     twine upload --config-file ./.pypirc dist dist/fitbert-"$VERSION".tar.gz
@@ -9,9 +9,9 @@ deploy ()
 main()
 {
     if [ -f .pypirc ]; then
-        deploy
+        release
     else
-        echo "## MISSING .pypirc file, can't deploy!"
+        echo "## MISSING .pypirc file, can't release to PyPi!"
     fi
 }
 
