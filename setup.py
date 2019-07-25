@@ -9,6 +9,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
+with open(os.path.join(here, "VERSION"), encoding="utf-8") as f:
+    __version__ = f.read().strip()
+    with open(os.path.join(here, "fitbert", "version.py"), "w+", encoding="utf-8") as v:
+        v.write("# CHANGES HERE HAVE NO EFFECT: ../VERSION is the source of truth\n")
+        v.write(f'__version__ = "{__version__}"')
+
 requirementPath = os.path.abspath("./requirements.txt")
 install_requires: List[str] = []
 if os.path.isfile(requirementPath):
@@ -22,7 +28,7 @@ setup(
     author="Qordoba",
     author_email="sam.havens@qordoba.com",
     url="https://github.com/Qordobacode/fitbert",
-    version="0.0.1",
+    version=__version__,
     license="unlicensed",
     long_description=long_description,
     long_description_content_type="text/markdown",
