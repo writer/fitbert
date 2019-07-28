@@ -2,3 +2,4 @@ build/
 dist/
 fitbert.egg-info/
 venv/
+fitbert_test_data/
