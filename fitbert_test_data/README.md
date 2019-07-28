@@ -13,6 +13,20 @@ Plan text (used to generate fill-in-the-blank tasks) comes from:
 
 You can use other datasets in `.csv` format, but remember to rename text column to `text`.
 
+## Installation:
+
+- Dependencies:
+`pip3 install -r requirements.txt`
+
+- Spacy default model:
+`python3 -m spacy download en_core_web_sm`
+
+- Wordnet for NLTK: 
+```python
+import nltk
+nltk.download()
+```
+
 ## Usage
 
 `python3 main.py ./path/to/plain/text.csv ./path/to/output/path.json -m [max_count] -t [gap_type] -s [mask_string]`
