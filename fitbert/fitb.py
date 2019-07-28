@@ -109,27 +109,6 @@ class FitBert:
                     options.append(w)
         return options
 
-    def rank(
-        self, sent: str, options: List[str], delemmatize: bool = False
-    ) -> List[str]:
-        if len(options) == 1:
-            delemmatize = True
-        if delemmatize:
-            options = self._delemmatize_options(options)
-        scored = self._get_probs_for_words(sent, options)
-        ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)
-        return list(list(zip(*ranked))[0])
-
-    def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
-        ranked = self.rank(sent, options, delemmatize)
-        best_word = ranked[0]
-        return sent.replace(self.mask_token, best_word)
-
-    def mask_fitb(self, sent: str, span: Tuple[int, int]) -> str:
-        masked_str, replaced = self.mask(sent, span)
-        options = [replaced]
-        return self.fitb(masked_str, options, delemmatize=True)
-
     def get_sentence_options(self, sent: str, options: List[str]) -> List[str]:
         sentence_options = []
         for option in options:
@@ -177,12 +156,37 @@ class FitBert:
                 sent = sent.replace(self.mask_token, " ".join([first_word, self.mask_token]))
         return options, sent, first_word, last_word
 
-    def rank_multi(self, sent: str, options: List[str]) -> List[str]:
+    def rank(
+        self, sent: str, options: List[str], delemmatize: bool = False
+    ) -> List[str]:
+        if len(options) == 1:
+            delemmatize = True
+        if delemmatize:
+            options = self._delemmatize_options(options)
+        scored = self._get_probs_for_words(sent, options)
+        ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)
+        return list(list(zip(*ranked))[0])
+
+    def rank_multi(self, sent: str, options: List[str], delemmatize: bool = False) -> List[str]:
         ranked_options = []
         if self.is_multi_word(options):
             options, sent, first_word, last_word = self.simplify_options(sent, options)
             ranked_options = self.sentence_prob_to_rank(sent, options)
             ranked_options = [" ".join([first_word, r, last_word]).strip() for r in ranked_options]
         else:
-            ranked_options = self.rank(sent, options=options)
+            ranked_options = self.rank(sent, options, delemmatize)
         return ranked_options
+
+    def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
+        ranked = self.rank_multi(sent, options, delemmatize)
+        best_word = ranked[0]
+        return sent.replace(self.mask_token, best_word)
+
+    def mask_fitb(self, sent: str, span: Tuple[int, int]) -> str:
+        masked_str, replaced = self.mask(sent, span)
+        options = [replaced]
+        return self.fitb(masked_str, options, delemmatize=True)
+
+
+
+
