@@ -9,7 +9,7 @@ Every solution needs a test set. This subrepo is meant to generate fill-in-the-b
 
 Plan text (used to generate fill-in-the-blank tasks) comes from:
 
-[Kaggle: Global News Dataset](//drawception.com/player/546330/nodo-bird/)
+[Kaggle: Global News Dataset](https://www.kaggle.com/dbs800/global-news-dataset)
 
 You can use other datasets in `.csv` format, but remember to rename text column to `text`.
 
