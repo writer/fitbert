@@ -12,6 +12,7 @@ from pytorch_pretrained_bert import BertForMaskedLM, tokenization
 class FitBert:
     def __init__(
         self,
+        device=None,
         model=None,
         tokenizer=None,
         model_name="bert-large-uncased",
@@ -19,6 +20,7 @@ class FitBert:
     ):
         self.mask_token = mask_token
         self.delemmatizer = Delemmatizer()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("using model:", model_name)
         if not model:
             self.bert = BertForMaskedLM.from_pretrained(model_name)
@@ -28,6 +30,7 @@ class FitBert:
             self.tokenizer = tokenization.BertTokenizer.from_pretrained(model_name)
         else:
             self.tokenizer = tokenizer
+        self.bert.to(self.device)
         self.bert.eval()
 
     @staticmethod
@@ -83,6 +86,7 @@ class FitBert:
                     print("couldn't convert tokens to IDs, ", toks)
                     return None
                 tens = torch.LongTensor(input_ids).unsqueeze(0)
+                tens = tens.to(self.device)
 
                 # don't need gradients at inference time, thank god
                 # speeds things up considerably
