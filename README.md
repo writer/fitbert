@@ -15,7 +15,17 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 
 ## Usage
 
-### Server
+[A Jupyter notebook with a short introduction is available here.](https://colab.research.google.com/drive/1NHYRMR7pKt9uY_KfFhIKXwPwvuX-VQLW)
+
+FitBert will automatically use GPU if `torch.cuda.is_available()`. Which is a good thing, because CPU inference time is really bad:
+
+![cpu inference time chart showing roughly 1 prediction per second](https://imgur.com/3u1U9P8.png)
+
+Here is what GPU inference times are looking like
+
+![gpu inference time chart showing roughly 100x speedup over CPU to approximately 100 per second](https://imgur.com/aEUmJXn.png)
+
+### Usage as a library / in a server
 
 ```python
 from fitbert import FitBert
@@ -55,7 +65,7 @@ filled_in = fb.fitb(masked_string, options=options)
 filled_in = fb.fitb(masked_string, options=options, delemmatize=True)
 ```
 
-If you are already using `pytorch_pretrained_bert.BertForMaskedLM`, you can pass pass it in (this is not implemented):
+If you are already using `pytorch_pretrained_bert.BertForMaskedLM`, and have an instance of BertForMaskedLM already instantiated, you can pass pass it in to reuse it:
 
 ```python
 BLM = pytorch_pretrained_bert.BertForMaskedLM.from_pretrained(model_name)
