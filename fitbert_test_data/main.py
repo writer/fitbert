@@ -39,7 +39,11 @@ def main(args):
     gap_type = args.gap_type
     mask_string = args.mask_string
 
-    dataset_df = pd.read_csv(input_file_path, encoding="ISO-8859-1")
+    try:
+        dataset_df = pd.read_csv(input_file_path, encoding="utf-8")
+    except:
+        dataset_df = pd.read_csv(input_file_path, encoding="ISO-8859-1")
+
     dataset_df = dataset_df[0:max_count]
 
     dataset_with_gaps = []
