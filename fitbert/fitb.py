@@ -153,11 +153,15 @@ class FitBert:
             if len(set([o.split()[-1] for o in options])) == 1:
                 last_word = options[0].split()[-1]
                 options = [" ".join(o.split()[:-1]) for o in options]
-                sent = sent.replace(self.mask_token, " ".join([self.mask_token, last_word]))
+                sent = sent.replace(
+                    self.mask_token, " ".join([self.mask_token, last_word])
+                )
             elif len(set([o.split()[0] for o in options])) == 1:
                 first_word = options[0].split()[0]
                 options = [" ".join(o.split()[1:]) for o in options]
-                sent = sent.replace(self.mask_token, " ".join([first_word, self.mask_token]))
+                sent = sent.replace(
+                    self.mask_token, " ".join([first_word, self.mask_token])
+                )
         return options, sent, first_word, last_word
 
     def rank(
@@ -171,12 +175,16 @@ class FitBert:
         ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)
         return list(list(zip(*ranked))[0])
 
-    def rank_multi(self, sent: str, options: List[str], delemmatize: bool = False) -> List[str]:
+    def rank_multi(
+        self, sent: str, options: List[str], delemmatize: bool = False
+    ) -> List[str]:
         ranked_options = []
         if self.is_multi_word(options):
             options, sent, first_word, last_word = self.simplify_options(sent, options)
             ranked_options = self.sentence_prob_to_rank(sent, options)
-            ranked_options = [" ".join([first_word, r, last_word]).strip() for r in ranked_options]
+            ranked_options = [
+                " ".join([first_word, r, last_word]).strip() for r in ranked_options
+            ]
         else:
             ranked_options = self.rank(sent, options, delemmatize)
         return ranked_options
@@ -190,7 +198,3 @@ class FitBert:
         masked_str, replaced = self.mask(sent, span)
         options = [replaced]
         return self.fitb(masked_str, options, delemmatize=True)
-
-
-
-

@@ -50,21 +50,17 @@ def test_ranking():
     assert callable(fb.fitb)
 
     sentences = [
-                    "When she started talking about her ex-boyfriends, he looked like a ***mask*** out of water",
-                    "The boy was warned that if he misbehaved in the class, he would have to pay ***mask***.",
-                    "I am surprised that you have ***mask*** patience.",
-                ]
+        "When she started talking about her ex-boyfriends, he looked like a ***mask*** out of water",
+        "The boy was warned that if he misbehaved in the class, he would have to pay ***mask***.",
+        "I am surprised that you have ***mask*** patience.",
+    ]
 
-    options =   [
-                    ["frog", "fish"],
-                    ["the drummer", "the flutist", "the piper"],
-                    ["such a", "so", "such"],
-                ]
-    answers =   [
-                    "fish",
-                    "the piper",
-                    "such",
-                ]
+    options = [
+        ["frog", "fish"],
+        ["the drummer", "the flutist", "the piper"],
+        ["such a", "so", "such"],
+    ]
+    answers = ["fish", "the piper", "such"]
     for sentence, option, answer in zip(sentences, options, answers):
         ranked_options = fb.rank_multi(sentence, option)
         assert ranked_options[0] == answer, "It should rank options"
