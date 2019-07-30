@@ -1,4 +1,5 @@
 import re
+from pprint import pprint
 
 import nltk as nltk
 import pyinflect
@@ -23,361 +24,614 @@ def conjugate(verb_token):
         VBN = verb_token._.inflect("VBN")
 
         if verb_token.lemma_ == "be":
-            verb_forms.append(
-                ["", "", VBP, "present simple", "present", "active", ["1S"]]
-            )  # write
-            verb_forms.append(
-                [
-                    "",
-                    "",
-                    "are",
-                    "present simple",
-                    "present",
-                    "active",
-                    ["2S", "1P", "2P", "3P"],
-                ]
-            )  # write
+            verb_forms += [
+                {
+                    "1P": False,
+                    "1S": True,
+                    "2P": False,
+                    "2S": False,
+                    "3P": False,
+                    "3S": False,
+                    "aux_1": "",
+                    "aux_2": "",
+                    "is_active": True,
+                    "tense": "present",
+                    "tense_name": "present simple",
+                    "verb": VBP,
+                },
+                {
+                    "1P": True,
+                    "1S": False,
+                    "2P": True,
+                    "2S": True,
+                    "3P": True,
+                    "3S": False,
+                    "aux_1": "",
+                    "aux_2": "",
+                    "is_active": True,
+                    "tense": "present",
+                    "tense_name": "present simple",
+                    "verb": "are",
+                },
+            ]
         else:
-            verb_forms.append(
-                [
-                    "",
-                    "",
-                    VBP,
-                    "present simple",
-                    "present",
-                    "active",
-                    ["1S", "2S", "1P", "2P", "3P"],
-                ]
-            )  # write
-        verb_forms.append(
-            ["", "", VBZ, "present simple", "present", "active", ["3S"]]
-        )  # writes
-        verb_forms.append(
-            ["am", "", VBN, "present simple", "present", "passive", ["1S"]]
-        )  # am written
-        verb_forms.append(
-            ["is", "", VBN, "present simple", "present", "passive", ["3S"]]
-        )  # is written
-        verb_forms.append(
-            [
-                "are",
-                "",
-                VBN,
-                "present simple",
-                "present",
-                "passive",
-                ["2S", "1P", "2P", "3P"],
+            verb_forms += [
+                {
+                    "1P": True,
+                    "1S": True,
+                    "2P": True,
+                    "2S": True,
+                    "3P": True,
+                    "3S": False,
+                    "aux_1": "",
+                    "aux_2": "",
+                    "is_active": True,
+                    "tense": "present",
+                    "tense_name": "present simple",
+                    "verb": VBP,
+                }
             ]
-        )  # are written
-        verb_forms.append(
-            ["am", "", VBG, "present continuous", "present", "active", ["1S"]]
-        )  # am writing
-        verb_forms.append(
-            ["is", "", VBG, "present continuous", "present", "active", ["3S"]]
-        )  # is writing
-        verb_forms.append(
-            [
-                "are",
-                "",
-                VBG,
-                "present continuous",
-                "present",
-                "active",
-                ["2S", "1P", "2P", "3P"],
-            ]
-        )  # are writing
-        verb_forms.append(
-            ["am", "being", VBN, "present continuous", "present", "passive", ["1S"]]
-        )  # am being written
-        verb_forms.append(
-            ["is", "being", VBN, "present continuous", "present", "passive", ["3S"]]
-        )  # is being written
-        verb_forms.append(
-            [
-                "are",
-                "being",
-                VBN,
-                "present continuous",
-                "present",
-                "passive",
-                ["2S", "1P", "2P", "3P"],
-            ]
-        )  # are being written
-        verb_forms.append(
-            [
-                "",
-                "",
-                VBD,
-                "past simple",
-                "past",
-                "active",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # wrote
-        verb_forms.append(
-            ["was", "", VBN, "past simple", "past", "passive", ["1S", "3S"]]
-        )  # was written
-        verb_forms.append(
-            [
-                "were",
-                "",
-                VBN,
-                "past simple",
-                "past",
-                "passive",
-                ["2S", "1P", "2P", "3P"],
-            ]
-        )  # were written
-        verb_forms.append(
-            ["was", "", VBG, "past continuous", "past", "active", ["1S", "3S"]]
-        )  # was writing
-        verb_forms.append(
-            [
-                "were",
-                "",
-                VBG,
-                "past continuous",
-                "past",
-                "active",
-                ["2S", "1P", "2P", "3P"],
-            ]
-        )  # were writing
-        verb_forms.append(
-            ["was", "being", VBN, "past continuous", "past", "passive", ["1S", "3S"]]
-        )  # was being written
-        verb_forms.append(
-            [
-                "were",
-                "being",
-                VBN,
-                "past continuous",
-                "past",
-                "passive",
-                ["2S", "1P", "2P", "3P"],
-            ]
-        )  # were being written
-        verb_forms.append(
-            [
-                "have",
-                "",
-                VBN,
-                "present perfect simple",
-                "present",
-                "active",
-                ["1S", "2S", "1P", "2P", "3P"],
-            ]
-        )  # have written
-        verb_forms.append(
-            ["has", "", VBN, "present perfect simple", "present", "active", ["3S"]]
-        )  # has written
-        verb_forms.append(
-            [
-                "have",
-                "been",
-                VBN,
-                "present perfect simple",
-                "present",
-                "passive",
-                ["1S", "2S", "1P", "2P", "3P"],
-            ]
-        )  # have been written
-        verb_forms.append(
-            ["has", "been", VBN, "present perfect simple", "present", "passive", ["3S"]]
-        )  # has been written
-        verb_forms.append(
-            [
-                "have",
-                "been",
-                VBG,
-                "present perfect continuous",
-                "present",
-                "active",
-                ["1S", "2S", "1P", "2P", "3P"],
-            ]
-        )  # have been writing
-        verb_forms.append(
-            [
-                "has",
-                "been",
-                VBG,
-                "present perfect continuous",
-                "present",
-                "active",
-                ["3S"],
-            ]
-        )  # has been writing
-        verb_forms.append(
-            [
-                "have",
-                "been being",
-                VBN,
-                "present perfect continuous",
-                "present",
-                "passive",
-                ["1S", "2S", "1P", "2P", "3P"],
-            ]
-        )  # have been being written
-        verb_forms.append(
-            [
-                "has",
-                "been being",
-                VBN,
-                "present perfect continuous",
-                "present",
-                "passive",
-                ["3S"],
-            ]
-        )  # has been being written
-        verb_forms.append(
-            [
-                "had",
-                "",
-                VBN,
-                "past perfect simple",
-                "past",
-                "active",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # had written
-        verb_forms.append(
-            [
-                "had",
-                "been",
-                VBN,
-                "past perfect simple",
-                "past",
-                "passive",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # had been written
-        verb_forms.append(
-            [
-                "had",
-                "been",
-                VBG,
-                "past perfect continuous",
-                "past",
-                "active",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # had been writing
-        verb_forms.append(
-            [
-                "had",
-                "been",
-                VBN,
-                "past perfect continuous",
-                "past",
-                "passive",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # had been written
-        verb_forms.append(
-            [
-                "will",
-                "",
-                VB,
-                "future simple",
-                "future",
-                "active",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will write
-        verb_forms.append(
-            [
-                "will",
-                "be",
-                VBN,
-                "future simple",
-                "future",
-                "passive",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will be written
-        verb_forms.append(
-            [
-                "will",
-                "be",
-                VBG,
-                "future continuous",
-                "future",
-                "active",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will be writing
-        verb_forms.append(
-            [
-                "will",
-                "be being",
-                VBN,
-                "future continuous",
-                "future",
-                "passive",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will be being written
-        verb_forms.append(
-            [
-                "will",
-                "have",
-                VBN,
-                "future perfect simple",
-                "future",
-                "active",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will have written
-        verb_forms.append(
-            [
-                "will",
-                "have been",
-                VBN,
-                "future perfect simple",
-                "future",
-                "passive",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will have been written
-        verb_forms.append(
-            [
-                "will",
-                "have been",
-                VBG,
-                "future perfect continuous",
-                "future",
-                "active",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will have been writing
-        verb_forms.append(
-            [
-                "will",
-                "have been being",
-                VBN,
-                "future perfect continuous",
-                "future",
-                "passive",
-                ["1S", "2S", "3S", "1P", "2P", "3P"],
-            ]
-        )  # will have been being written
+
+        verb_forms += [
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present simple",
+                "verb": VBZ,
+            },
+            {
+                "1P": False,
+                "1S": True,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": False,
+                "aux_1": "am",
+                "aux_2": "",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present simple",
+                "verb": VBN,
+            },
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "is",
+                "aux_2": "",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": False,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "are",
+                "aux_2": "",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present simple",
+                "verb": VBN,
+            },
+            {
+                "1P": False,
+                "1S": True,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": False,
+                "aux_1": "am",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "is",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": True,
+                "1S": False,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "are",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": False,
+                "1S": True,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": False,
+                "aux_1": "am",
+                "aux_2": "being",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "is",
+                "aux_2": "being",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": False,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "are",
+                "aux_2": "being",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "past",
+                "tense_name": "past simple",
+                "verb": VBD,
+            },
+            {
+                "1P": False,
+                "1S": True,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "was",
+                "aux_2": "",
+                "is_active": False,
+                "tense": "past",
+                "tense_name": "past simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": False,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "were",
+                "aux_2": "",
+                "is_active": False,
+                "tense": "past",
+                "tense_name": "past simple",
+                "verb": VBN,
+            },
+            {
+                "1P": False,
+                "1S": True,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "was",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "past",
+                "tense_name": "past continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": True,
+                "1S": False,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "were",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "past",
+                "tense_name": "past continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": False,
+                "1S": True,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "was",
+                "aux_2": "being",
+                "is_active": False,
+                "tense": "past",
+                "tense_name": "past continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": False,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "were",
+                "aux_2": "being",
+                "is_active": False,
+                "tense": "past",
+                "tense_name": "past continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "have",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "has",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "have",
+                "aux_2": "been",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "has",
+                "aux_2": "been",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "have",
+                "aux_2": "been",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present perfect continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "has",
+                "aux_2": "been",
+                "is_active": True,
+                "tense": "present",
+                "tense_name": "present perfect continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": False,
+                "aux_1": "have",
+                "aux_2": "been being",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present perfect continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": False,
+                "1S": False,
+                "2P": False,
+                "2S": False,
+                "3P": False,
+                "3S": True,
+                "aux_1": "has",
+                "aux_2": "been being",
+                "is_active": False,
+                "tense": "present",
+                "tense_name": "present perfect continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "had",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "past",
+                "tense_name": "past perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "had",
+                "aux_2": "been",
+                "is_active": False,
+                "tense": "past",
+                "tense_name": "past perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "had",
+                "aux_2": "been",
+                "is_active": True,
+                "tense": "past",
+                "tense_name": "past perfect continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "had",
+                "aux_2": "been",
+                "is_active": False,
+                "tense": "past",
+                "tense_name": "past perfect continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "",
+                "is_active": True,
+                "tense": "future",
+                "tense_name": "future simple",
+                "verb": VB,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "be",
+                "is_active": False,
+                "tense": "future",
+                "tense_name": "future simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "be",
+                "is_active": True,
+                "tense": "future",
+                "tense_name": "future continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "be being",
+                "is_active": False,
+                "tense": "future",
+                "tense_name": "future continuous",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "have",
+                "is_active": True,
+                "tense": "future",
+                "tense_name": "future perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "have been",
+                "is_active": False,
+                "tense": "future",
+                "tense_name": "future perfect simple",
+                "verb": VBN,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "have been",
+                "is_active": True,
+                "tense": "future",
+                "tense_name": "future perfect continuous",
+                "verb": VBG,
+            },
+            {
+                "1P": True,
+                "1S": True,
+                "2P": True,
+                "2S": True,
+                "3P": True,
+                "3S": True,
+                "aux_1": "will",
+                "aux_2": "have been being",
+                "is_active": False,
+                "tense": "future",
+                "tense_name": "future perfect continuous",
+                "verb": VBN,
+            },
+        ]
 
     return verb_forms
 
 
+adv_order_exceptions = [
+    "there",
+    "here",
+    "everywhere",
+    "elsewhere",
+    "anywhere",
+    "nowhere",
+    "somewhere",
+]
+
+
 def get_verb_options(
-    verb, verb_phrase_inffix="", tense=["present", "past", "future"], form=["active"]
+    verb, verb_phrase_inffix="", tense=["present", "past", "future"], is_active=True
 ):
     verb_forms = conjugate(verb)
+    verb_forms = filter(
+        lambda x: x["is_active"] == is_active and x["tense"] in tense, verb_forms
+    )
     options = []
-    diff_order = ["there", "here", "everywhere", "elsewhere", "anywhere", "nowhere"]
     for verb_form in verb_forms:
-        if (verb_form[4] in tense) and (verb_form[5] in form):
-            if verb_phrase_inffix.lower() in diff_order:
-                elements = [verb_phrase_inffix, verb_form[0]] + verb_form[1:3]
-            else:
-                elements = [verb_form[0], verb_phrase_inffix] + verb_form[1:3]
-            verb_phrase = re.sub(r"\s{2,}", " ", " ".join(elements)).strip()
-            options.append(verb_phrase)
+        if verb_phrase_inffix.lower() in adv_order_exceptions:
+            elements = [
+                verb_phrase_inffix,
+                verb_form["aux_1"],
+                verb_form["aux_2"],
+                verb_form["verb"],
+            ]
+        else:
+            elements = [
+                verb_form["aux_1"],
+                verb_phrase_inffix,
+                verb_form["aux_2"],
+                verb_form["verb"],
+            ]
+        verb_phrase = re.sub(r"\s{2,}", " ", " ".join(elements)).strip()
+        options.append(verb_phrase)
     return options
 
 
@@ -417,9 +671,11 @@ def get_related_options(word, if_strict=True):
 if __name__ == "__main__":
 
     verb_token = nlp("direct")[0]
+
     verb_forms = conjugate(verb_token)
-
     related_words = get_related_options("direct", True)
+    verb_options = get_verb_options(verb_token, "always")
 
-    print(verb_forms)
-    print(related_words)
+    pprint(verb_forms)
+    pprint(related_words)
+    pprint(verb_options)
