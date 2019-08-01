@@ -2,12 +2,13 @@ from collections import defaultdict
 from typing import Dict, List, Tuple, Union, overload
 
 import torch
+from fitbert.delemmatize import Delemmatizer
 from fitbert.utils import mask as _mask
 from functional import pseq, seq
 from pytorch_pretrained_bert import BertForMaskedLM, tokenization
 
 
-class FitBertT:
+class FitBert:
     def __init__(
         self,
         model=None,
@@ -17,6 +18,7 @@ class FitBertT:
         disable_gpu=False,
     ):
         self.mask_token = mask_token
+        self.delemmatizer = Delemmatizer()
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() and not disable_gpu else "cpu"
         )
@@ -44,20 +46,20 @@ class FitBertT:
     def mask(self, s: str, span: Tuple[int, int]) -> Tuple[str, str]:
         return _mask(s, span, mask_token=self.mask_token)
 
-    def tokens_to_masked_ids(self, tokens, mask_ind):
+    def _tokens_to_masked_ids(self, tokens, mask_ind):
         masked_tokens = tokens[:]
         masked_tokens[mask_ind] = "[MASK]"
         masked_tokens = ["[CLS]"] + masked_tokens + ["[SEP]"]
         masked_ids = self.tokenizer.convert_tokens_to_ids(masked_tokens)
         return masked_ids
 
-    def get_sentence_probability(self, sent: str) -> float:
+    def _get_sentence_probability(self, sent: str) -> float:
 
         tokens = self.tokenizer.tokenize(sent)
         input_ids = (
             seq(tokens)
             .enumerate()
-            .starmap(lambda i, x: self.tokens_to_masked_ids(tokens, i))
+            .starmap(lambda i, x: self._tokens_to_masked_ids(tokens, i))
             .list()
         )
 
@@ -78,6 +80,14 @@ class FitBertT:
                 torch.cuda.empty_cache()
 
             return prob
+
+    def _delemmatize_options(self, options: List[str]) -> List[str]:
+        for word in options:
+            words_with_shared_lemma = self.delemmatizer(word)
+            for w in words_with_shared_lemma:
+                if w not in options:
+                    options.append(w)
+        return options
 
     def guess_single(self, masked_sent: str) -> List[str]:
 
@@ -142,7 +152,7 @@ class FitBertT:
         ranked_options = (
             seq(options)
             .map(lambda x: masked_sent.replace(self.mask_token, x))
-            .map(lambda x: self.get_sentence_probability(x))
+            .map(lambda x: self._get_sentence_probability(x))
             .zip(options)
             .sorted(key=lambda x: x[0], reverse=True)
             .map(lambda x: x[1])
@@ -150,7 +160,7 @@ class FitBertT:
 
         return ranked_options
 
-    def simplify_options(self, sent: str, options: List[str]):
+    def _simplify_options(self, sent: str, options: List[str]):
 
         options_split = seq(options).map(lambda x: x.split())
 
@@ -191,14 +201,17 @@ class FitBertT:
 
         return options, sent, start_words, end_words
 
-    def rank(self, sent: str, options: List[str]) -> str:
+    def rank(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
 
         options = seq(options).distinct()
 
         if seq(options).len() == 1:
             return options.list()
 
-        options, sent, start_words, end_words = self.simplify_options(sent, options)
+        if delemmatize:
+            options = self._delemmatize_options(options)
+
+        options, sent, start_words, end_words = self._simplify_options(sent, options)
 
         if self.is_multi(options):
             ranked = self.rank_multi(sent, options)
@@ -214,7 +227,12 @@ class FitBertT:
 
         return ranked
 
-    def fitb(self, sent: str, options: List[str]) -> str:
-        ranked = self.rank(sent, options)
+    def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
+        ranked = self.rank(sent, options, delemmatize)
         best_word = ranked[0]
         return sent.replace(self.mask_token, best_word)
+
+    def mask_fitb(self, sent: str, span: Tuple[int, int]) -> str:
+        masked_str, replaced = self.mask(sent, span)
+        options = [replaced]
+        return self.fitb(masked_str, options, delemmatize=True)
