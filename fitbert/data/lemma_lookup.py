@@ -41584,5 +41584,5 @@ LOOKUP = {
     "zoos": "zoo",
     "zoospores": "zoospore",
     "zucchinis": "zucchini",
-    "zygotes": "zygote"
+    "zygotes": "zygote",
 }
