@@ -1,27 +1,30 @@
-import operator
 from collections import defaultdict
-from functools import reduce
 from typing import Dict, List, Tuple, Union, overload
 
 import torch
-from fitbert.delemmatize import Delemmatizer
 from fitbert.utils import mask as _mask
+from functional import pseq, seq
 from pytorch_pretrained_bert import BertForMaskedLM, tokenization
 
 
-class FitBert:
+class FitBertT:
     def __init__(
         self,
         model=None,
         tokenizer=None,
         model_name="bert-large-uncased",
         mask_token="***mask***",
+        disable_gpu=False,
     ):
         self.mask_token = mask_token
-        self.delemmatizer = Delemmatizer()
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() and not disable_gpu else "cpu"
+        )
         print("using model:", model_name)
+        print("device:", self.device)
         if not model:
             self.bert = BertForMaskedLM.from_pretrained(model_name)
+            self.bert.to(self.device)
         else:
             self.bert = model
         if not tokenizer:
@@ -35,154 +38,183 @@ class FitBert:
         return x.exp() / (x.exp().sum(-1)).unsqueeze(-1)
 
     @staticmethod
-    def is_multi_word(options: List[str]) -> bool:
-        return True in [len(option.split()) > 1 for option in options]
+    def is_multi(options: List[str]) -> bool:
+        return seq(options).filter(lambda x: len(x.split()) != 1).non_empty()
 
     def mask(self, s: str, span: Tuple[int, int]) -> Tuple[str, str]:
         return _mask(s, span, mask_token=self.mask_token)
 
-    def _get_probs_for_words(self, sent: str, words: List[str]):
-        """
-        idea from (don't worry, it's Apache2 licensed)
-        https://github.com/yoavg/bert-syntax/blob/master/eval_bert.py
-        but modified for list of words
+    def tokens_to_masked_ids(self, tokens, mask_ind):
+        masked_tokens = tokens[:]
+        masked_tokens[mask_ind] = "[MASK]"
+        masked_tokens = ["[CLS]"] + masked_tokens + ["[SEP]"]
+        masked_ids = self.tokenizer.convert_tokens_to_ids(masked_tokens)
+        return masked_ids
 
-        also useful,
-        https://stackoverflow.com/questions/54978443/predicting-missing-words-in-a-sentence-natural-language-processing-model
+    def get_sentence_probability(self, sent: str) -> float:
 
-        @TODO this is not optimized! It loops instead of batching, forgive me, Tensor Gods!
-        """
-        option_2_token_count: Dict[str, int] = defaultdict(int)
-        for word in words:
-            toks = self.tokenizer.tokenize(word)
-            option_2_token_count[word] += len(toks)
+        tokens = self.tokenizer.tokenize(sent)
+        input_ids = (
+            seq(tokens)
+            .enumerate()
+            .starmap(lambda i, x: self.tokens_to_masked_ids(tokens, i))
+            .list()
+        )
 
-        token_count_2_option: Dict[int, List[str]] = defaultdict(list)
-        for k, v in option_2_token_count.items():
-            token_count_2_option[v].append(k)
+        tens = torch.LongTensor(input_ids).to(self.device)
+        with torch.no_grad():
+            preds = self.bert(tens)
+            probs = self.softmax(preds)
+            tokens_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+            prob = (
+                seq(tokens_ids)
+                .enumerate()
+                .starmap(lambda i, x: float(probs[i][i + 1][x].item()))
+                .reduce(lambda x, y: x * y, 1)
+            )
 
-        final_scores: Dict[str, List[float]] = {}
-        for tok_len, options_of_given_length in token_count_2_option.items():
+            del tens, preds, probs, tokens, input_ids
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
 
-            pre, target_s, post = sent.split("***")
-            if "mask" in target_s.lower():
-                target = ["[MASK]"] * tok_len
-            else:
-                # not sure how to get here, but it was in the original
-                target = self.tokenizer.tokenize(target_s)
+            return prob
 
-            tokens = ["[CLS]"] + self.tokenizer.tokenize(pre)
-            target_idx = len(tokens)
-            tokens += target + self.tokenizer.tokenize(post) + ["[SEP]"]
-            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-            for option in options_of_given_length:
-                try:
-                    toks = self.tokenizer.tokenize(option)
-                    tok_ids = self.tokenizer.convert_tokens_to_ids(toks)
-                except KeyError:
-                    print("couldn't convert tokens to IDs, ", toks)
-                    return None
-                tens = torch.LongTensor(input_ids).unsqueeze(0)
+    def guess_single(self, masked_sent: str) -> List[str]:
 
-                # don't need gradients at inference time, thank god
-                # speeds things up considerably
-                with torch.no_grad():
-                    pred = self.bert(tens)
-                scores = []
-                for i in range(tok_len):
-                    res = pred[0, target_idx + i]
-                    prob = self.softmax(res)
-                    score = float(prob[tok_ids[i]].item())
-                    # to explain the res[tok_ids] syntax:
-                    # >>> a = torch.tensor([1.0, 1.1, 1.2, 1.3])
-                    # >>> a[[1,2]]
-                    # tensor([1.1000, 1.2000])
-                    scores.append(score)
-                final_scores[option] = reduce(operator.mul, scores, 1)
-        return final_scores
+        pre, post = masked_sent.split(self.mask_token)
 
-    def _delemmatize_options(self, options: List[str]) -> List[str]:
-        for word in options:
-            words_with_shared_lemma = self.delemmatizer(word)
-            for w in words_with_shared_lemma:
-                if w not in options:
-                    options.append(w)
-        return options
+        tokens = ["[CLS]"] + self.tokenizer.tokenize(pre)
+        target_idx = len(tokens)
+        tokens += ["[MASK]"]
+        tokens += self.tokenizer.tokenize(post) + ["[SEP]"]
 
-    def rank(
-        self, sent: str, options: List[str], delemmatize: bool = False
-    ) -> List[str]:
-        if len(options) == 1:
-            delemmatize = True
-        if delemmatize:
-            options = self._delemmatize_options(options)
-        scored = self._get_probs_for_words(sent, options)
-        ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)
-        return list(list(zip(*ranked))[0])
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        tens = torch.LongTensor(input_ids).unsqueeze(0)
+        tens = tens.to(self.device)
+        with torch.no_grad():
+            preds = self.bert(tens)
+            probs = self.softmax(preds)
 
-    def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
-        ranked = self.rank(sent, options, delemmatize)
-        best_word = ranked[0]
-        return sent.replace(self.mask_token, best_word)
+            pred_idx = int(torch.argmax(probs[0, target_idx]).item())
+            pred_tok = self.tokenizer.convert_ids_to_tokens([pred_idx])[0]
 
-    def mask_fitb(self, sent: str, span: Tuple[int, int]) -> str:
-        masked_str, replaced = self.mask(sent, span)
-        options = [replaced]
-        return self.fitb(masked_str, options, delemmatize=True)
+            del pred_idx, tens, preds, probs, input_ids, tokens
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
+            return pred_tok
 
-    def get_sentence_options(self, sent: str, options: List[str]) -> List[str]:
-        sentence_options = []
-        for option in options:
-            sentence_option = sent.replace(self.mask_token, option)
-            sentence_options.append(sentence_option)
-        return sentence_options
+    def rank_single(self, masked_sent: str, words: List[str]) -> List[str]:
 
-    def get_sentence_score(self, sent: str) -> float:
-        sentence_prob = []
-        words = sent.split()
-        # remove and rememebr the ending sign
-        end_sign = words[-1][-1]
-        words[-1] = words[-1][:-1]
-        for i, word in enumerate(words):
-            masked_words = words[:]
-            masked_words[i] = self.mask_token
-            masked_sentence = " ".join(masked_words) + end_sign
-            prob_dict = self._get_probs_for_words(masked_sentence, [word])
-            sentence_prob.append(prob_dict[word])
-        return reduce(operator.mul, sentence_prob, 1)
+        pre, post = masked_sent.split(self.mask_token)
 
-    def sentence_prob_to_rank(self, sent: str, options: List[str]) -> List[str]:
-        sentence_options = self.get_sentence_options(sent, options)
-        opt_probs = []
-        for option, sentence_option in zip(options, sentence_options):
-            sentence_prob = self.get_sentence_score(sentence_option)
-            opt_probs.append([option, sentence_prob])
-        opt_probs = sorted(opt_probs, key=lambda x: x[1], reverse=True)
-        ranked = [e[0] for e in opt_probs]
-        return ranked
+        tokens = ["[CLS]"] + self.tokenizer.tokenize(pre)
+        target_idx = len(tokens)
+        tokens += ["[MASK]"]
+        tokens += self.tokenizer.tokenize(post) + ["[SEP]"]
+
+        words_ids = (
+            seq(words)
+            .map(lambda x: self.tokenizer.tokenize(x))
+            .map(lambda x: self.tokenizer.convert_tokens_to_ids(x)[0])
+        )
+
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        tens = torch.LongTensor(input_ids).unsqueeze(0)
+        tens = tens.to(self.device)
+        with torch.no_grad():
+            preds = self.bert(tens)
+            probs = self.softmax(preds)
+
+            ranked_options = (
+                seq(words_ids)
+                .map(lambda x: float(probs[0][target_idx][x].item()))
+                .zip(words)
+                .sorted(key=lambda x: x[0], reverse=True)
+                .map(lambda x: x[1])
+            ).list()
+
+            del tens, preds, probs, tokens, words_ids, input_ids
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
+            return ranked_options
+
+    def rank_multi(self, masked_sent: str, options: List[str]) -> List[str]:
+        ranked_options = (
+            seq(options)
+            .map(lambda x: masked_sent.replace(self.mask_token, x))
+            .map(lambda x: self.get_sentence_probability(x))
+            .zip(options)
+            .sorted(key=lambda x: x[0], reverse=True)
+            .map(lambda x: x[1])
+        ).list()
+
+        return ranked_options
 
     def simplify_options(self, sent: str, options: List[str]):
-        min_option_len = min([len(o.split()) for o in options])
-        last_word = ""
-        first_word = ""
-        if min_option_len > 1:
-            # check if last or first common:
-            if len(set([o.split()[-1] for o in options])) == 1:
-                last_word = options[0].split()[-1]
-                options = [" ".join(o.split()[:-1]) for o in options]
-                sent = sent.replace(self.mask_token, " ".join([self.mask_token, last_word]))
-            elif len(set([o.split()[0] for o in options])) == 1:
-                first_word = options[0].split()[0]
-                options = [" ".join(o.split()[1:]) for o in options]
-                sent = sent.replace(self.mask_token, " ".join([first_word, self.mask_token]))
-        return options, sent, first_word, last_word
 
-    def rank_multi(self, sent: str, options: List[str]) -> List[str]:
-        ranked_options = []
-        if self.is_multi_word(options):
-            options, sent, first_word, last_word = self.simplify_options(sent, options)
-            ranked_options = self.sentence_prob_to_rank(sent, options)
-            ranked_options = [" ".join([first_word, r, last_word]).strip() for r in ranked_options]
+        options_split = seq(options).map(lambda x: x.split())
+
+        trans_start = list(zip(*options_split))
+
+        start = (
+            seq(trans_start)
+            .take_while(lambda x: seq(x).distinct().len() == 1)
+            .map(lambda x: x[0])
+            .list()
+        )
+
+        options_split_reversed = seq(options_split).map(
+            lambda x: seq(x[len(start) :]).reverse()
+        )
+
+        trans_end = list(zip(*options_split_reversed))
+
+        end = (
+            seq(trans_end)
+            .take_while(lambda x: seq(x).distinct().len() == 1)
+            .map(lambda x: x[0])
+            .list()
+        )
+
+        start_words = seq(start).make_string(" ")
+        end_words = seq(end).reverse().make_string(" ")
+
+        options = (
+            seq(options_split)
+            .map(lambda x: x[len(start) : len(x) - len(end)])
+            .map(lambda x: seq(x).make_string(" ").strip())
+            .list()
+        )
+
+        sub = seq([start_words, self.mask_token, end_words]).make_string(" ").strip()
+        sent = sent.replace(self.mask_token, sub)
+
+        return options, sent, start_words, end_words
+
+    def rank(self, sent: str, options: List[str]) -> str:
+
+        options = seq(options).distinct()
+
+        if seq(options).len() == 1:
+            return options.list()
+
+        options, sent, start_words, end_words = self.simplify_options(sent, options)
+
+        if self.is_multi(options):
+            ranked = self.rank_multi(sent, options)
         else:
-            ranked_options = self.rank(sent, options=options)
-        return ranked_options
+            ranked = self.rank_single(sent, options)
+
+        ranked = (
+            seq(ranked)
+            .map(lambda x: [start_words, x, end_words])
+            .map(lambda x: seq(x).make_string(" ").strip())
+            .list()
+        )
+
+        return ranked
+
+    def fitb(self, sent: str, options: List[str]) -> str:
+        ranked = self.rank(sent, options)
+        best_word = ranked[0]
+        return sent.replace(self.mask_token, best_word)
