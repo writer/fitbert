@@ -84,8 +84,7 @@ class FitBert:
     def _delemmatize_options(self, options: List[str]) -> List[str]:
         options = (
             seq(options[:])
-            .map(lambda x: self.delemmatizer(x))
-            .flatten()
+            .flat_map(lambda x: self.delemmatizer(x))
             .union(options)
             .list()
         )
