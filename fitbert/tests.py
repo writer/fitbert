@@ -1,5 +1,3 @@
-import json
-
 import pytest
 from fitbert import FitBert
 from fitbert.delemmatize import Delemmatizer
