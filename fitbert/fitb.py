@@ -82,11 +82,13 @@ class FitBert:
             return prob
 
     def _delemmatize_options(self, options: List[str]) -> List[str]:
-        for word in options:
-            words_with_shared_lemma = self.delemmatizer(word)
-            for w in words_with_shared_lemma:
-                if w not in options:
-                    options.append(w)
+        options = (
+            seq(options[:])
+            .map(lambda x: self.delemmatizer(x))
+            .flatten()
+            .union(options)
+            .list()
+        )
         return options
 
     def guess_single(self, masked_sent: str) -> List[str]:
@@ -201,13 +203,15 @@ class FitBert:
 
         return options, sent, start_words, end_words
 
-    def rank(self, sent: str, options: List[str], delemmatize: bool = False) -> List[str]:
+    def rank(
+        self, sent: str, options: List[str], delemmatize: bool = False
+    ) -> List[str]:
 
         options = seq(options).distinct().list()
 
         if delemmatize:
             options = seq(self._delemmatize_options(options)).distinct().list()
-        
+
         if seq(options).len() == 1:
             return options.list()
 
