@@ -201,15 +201,15 @@ class FitBert:
 
         return options, sent, start_words, end_words
 
-    def rank(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
+    def rank(self, sent: str, options: List[str], delemmatize: bool = False) -> List[str]:
 
-        options = seq(options).distinct()
-
-        if seq(options).len() == 1:
-            return options.list()
+        options = seq(options).distinct().list()
 
         if delemmatize:
-            options = self._delemmatize_options(options)
+            options = seq(self._delemmatize_options(options)).distinct().list()
+        
+        if seq(options).len() == 1:
+            return options.list()
 
         options, sent, start_words, end_words = self._simplify_options(sent, options)
 

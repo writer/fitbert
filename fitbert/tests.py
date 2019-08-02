@@ -62,5 +62,12 @@ def test_ranking():
     ]
     answers = ["fish", "the piper", "such"]
     for sentence, option, answer in zip(sentences, options, answers):
-        ranked_options = fb.rank_multi(sentence, option)
+        ranked_options = fb.rank(sentence, option)
         assert ranked_options[0] == answer, "It should rank options"
+
+    sentence = "Psychology includes the study of conscious and unconscious phenomena, as well as ***mask*** and thought."
+    options = ["feelings"]
+    answer = "feeling"
+
+    ranked_options = fb.rank(sentence, options, True)
+    assert ranked_options[0] == answer, "It should find and rank related options"
