@@ -13,9 +13,9 @@ SUGGESTED_VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"
 
 update_deps ()
 {
-    pip install -U setuptools wheel
-    pip install -r requirements-dev.txt
-    pip install -r requirements.txt
+    pip3 install -U setuptools wheel
+    pip3 install -r requirements-dev.txt
+    pip3 install -r requirements.txt
 }
 
 bump_version ()
@@ -43,7 +43,7 @@ update_changelog ()
 
 create_dist ()
 {
-    python setup.py sdist
+    python3 setup.py sdist
 }
 
 main ()
