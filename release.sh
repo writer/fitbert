@@ -3,7 +3,7 @@
 release ()
 {
     VERSION=`cat VERSION`
-    twine upload --config-file ./.pypirc dist dist/fitbert-"$VERSION".tar.gz
+    twine upload --config-file .pypirc dist/fitbert-"$VERSION".tar.gz
 }
 
 main()
