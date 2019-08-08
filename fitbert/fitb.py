@@ -136,30 +136,32 @@ class FitBert:
             preds = self.bert(tens)
             probs = self.softmax(preds)
 
-            ranked_options = (
+            ranked_pairs = (
                 seq(words_ids)
                 .map(lambda x: float(probs[0][target_idx][x].item()))
                 .zip(words)
                 .sorted(key=lambda x: x[0], reverse=True)
-                .map(lambda x: x[1])
-            ).list()
+            )
+
+            ranked_options = (seq(ranked_pairs).map(lambda x: x[1])).list()
+            ranked_options_prob = (seq(ranked_pairs).map(lambda x: x[0])).list()
 
             del tens, preds, probs, tokens, words_ids, input_ids
             if self.device == "cuda":
                 torch.cuda.empty_cache()
-            return ranked_options
+            return ranked_options, ranked_options_prob
 
     def rank_multi(self, masked_sent: str, options: List[str]) -> List[str]:
-        ranked_options = (
+        ranked_pairs = (
             seq(options)
             .map(lambda x: masked_sent.replace(self.mask_token, x))
             .map(lambda x: self._get_sentence_probability(x))
             .zip(options)
             .sorted(key=lambda x: x[0], reverse=True)
-            .map(lambda x: x[1])
-        ).list()
-
-        return ranked_options
+        )
+        ranked_options = (seq(ranked_pairs).map(lambda x: x[1])).list()
+        ranked_options_prob = (seq(ranked_pairs).map(lambda x: x[0])).list()
+        return ranked_options, ranked_options_prob
 
     def _simplify_options(self, sent: str, options: List[str]):
 
@@ -203,7 +205,7 @@ class FitBert:
         return options, sent, start_words, end_words
 
     def rank(
-        self, sent: str, options: List[str], delemmatize: bool = False
+        self, sent: str, options: List[str], delemmatize: bool = False, with_prob=False
     ) -> List[str]:
 
         options = seq(options).distinct().list()
@@ -217,9 +219,9 @@ class FitBert:
         options, sent, start_words, end_words = self._simplify_options(sent, options)
 
         if self.is_multi(options):
-            ranked = self.rank_multi(sent, options)
+            ranked, prob = self.rank_multi(sent, options)
         else:
-            ranked = self.rank_single(sent, options)
+            ranked, prob = self.rank_single(sent, options)
 
         ranked = (
             seq(ranked)
@@ -227,8 +229,16 @@ class FitBert:
             .map(lambda x: seq(x).make_string(" ").strip())
             .list()
         )
+        if with_prob:
+            return ranked, prob
+        else:
+            return ranked
 
-        return ranked
+    def rank_with_prob(
+        self, sent: str, options: List[str], delemmatize: bool = False
+    ) -> List[str]:
+        ranked, prob = self.rank(sent, options, delemmatize, True)
+        return ranked, prob
 
     def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
         ranked = self.rank(sent, options, delemmatize)
