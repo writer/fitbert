@@ -90,7 +90,7 @@ class FitBert:
         )
         return options
 
-    def guess_single(self, masked_sent: str, n: int) -> List[str]:
+    def guess_single(self, masked_sent: str, n: int = 1) -> List[str]:
 
         pre, post = masked_sent.split(self.mask_token)
 
