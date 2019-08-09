@@ -7,7 +7,8 @@ V_MAJOR=${BASE_LIST[0]}
 V_MINOR=${BASE_LIST[1]}
 V_PATCH=${BASE_LIST[2]}
 echo -e "Current version: $BASE_STRING"
-V_PATCH=$((V_PATCH + 1))
+V_MINOR=$((V_MINOR + 1))
+V_PATCH=0
 SUGGESTED_VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"
 
 update_deps ()
