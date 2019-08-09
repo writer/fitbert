@@ -90,7 +90,7 @@ class FitBert:
         )
         return options
 
-    def guess_single(self, masked_sent: str) -> List[str]:
+    def guess_single(self, masked_sent: str, n: int = 1):
 
         pre, post = masked_sent.split(self.mask_token)
 
@@ -106,15 +106,18 @@ class FitBert:
             preds = self.bert(tens)
             probs = self.softmax(preds)
 
-            pred_idx = int(torch.argmax(probs[0, target_idx]).item())
-            pred_tok = self.tokenizer.convert_ids_to_tokens([pred_idx])[0]
+            pred_top = torch.topk(probs[0, target_idx], n)
+            pred_prob = pred_top[0].tolist()
+            pred_idx = pred_top[1].tolist()
 
-            del pred_idx, tens, preds, probs, input_ids, tokens
+            pred_tok = self.tokenizer.convert_ids_to_tokens(pred_idx)
+
+            del pred_top, pred_idx, tens, preds, probs, input_ids, tokens
             if self.device == "cuda":
                 torch.cuda.empty_cache()
-            return pred_tok
+            return pred_tok, pred_prob
 
-    def rank_single(self, masked_sent: str, words: List[str]) -> List[str]:
+    def rank_single(self, masked_sent: str, words: List[str]):
 
         pre, post = masked_sent.split(self.mask_token)
 
@@ -151,7 +154,7 @@ class FitBert:
                 torch.cuda.empty_cache()
             return ranked_options, ranked_options_prob
 
-    def rank_multi(self, masked_sent: str, options: List[str]) -> List[str]:
+    def rank_multi(self, masked_sent: str, options: List[str]):
         ranked_pairs = (
             seq(options)
             .map(lambda x: masked_sent.replace(self.mask_token, x))
@@ -205,7 +208,11 @@ class FitBert:
         return options, sent, start_words, end_words
 
     def rank(
-        self, sent: str, options: List[str], delemmatize: bool = False, with_prob=False
+        self,
+        sent: str,
+        options: List[str],
+        delemmatize: bool = False,
+        with_prob: bool = False,
     ) -> List[str]:
 
         options = seq(options).distinct().list()
@@ -234,11 +241,17 @@ class FitBert:
         else:
             return ranked
 
-    def rank_with_prob(
-        self, sent: str, options: List[str], delemmatize: bool = False
-    ) -> List[str]:
+    def rank_with_prob(self, sent: str, options: List[str], delemmatize: bool = False):
         ranked, prob = self.rank(sent, options, delemmatize, True)
         return ranked, prob
+
+    def guess(self, sent: str, n: int = 1) -> List[str]:
+        pred_tok, _ = self.guess_single(sent, n)
+        return pred_tok
+
+    def guess_with_prob(self, sent: str, n: int = 1):
+        pred_tok, pred_prob = self.guess_single(sent, n)
+        return pred_tok, pred_prob
 
     def fitb(self, sent: str, options: List[str], delemmatize: bool = False) -> str:
         ranked = self.rank(sent, options, delemmatize)
