@@ -90,7 +90,7 @@ class FitBert:
         )
         return options
 
-    def guess_single(self, masked_sent: str) -> List[str]:
+    def guess_single(self, masked_sent: str, n: int) -> List[str]:
 
         pre, post = masked_sent.split(self.mask_token)
 
@@ -106,8 +106,8 @@ class FitBert:
             preds = self.bert(tens)
             probs = self.softmax(preds)
 
-            pred_idx = int(torch.argmax(probs[0, target_idx]).item())
-            pred_tok = self.tokenizer.convert_ids_to_tokens([pred_idx])[0]
+            pred_idx = torch.topk(probs[0, target_idx], n)[1].tolist()
+            pred_tok = self.tokenizer.convert_ids_to_tokens(pred_idx)
 
             del pred_idx, tens, preds, probs, input_ids, tokens
             if self.device == "cuda":
