@@ -50,8 +50,8 @@ main ()
 {
     update_deps
     bump_version
-    update_changelog
     create_dist
+    update_changelog
 }
 
 #########################
