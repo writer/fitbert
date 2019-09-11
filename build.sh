@@ -35,7 +35,7 @@ update_changelog ()
     cat CHANGELOG.md >> tmpfile
     mv tmpfile CHANGELOG.md
 
-    git add CHANGELOG.md VERSION
+    git add CHANGELOG.md VERSION fitbert/version.py
     git commit -m "Bump version to ${SUGGESTED_VERSION}."
     git tag -a -m "Tag version ${SUGGESTED_VERSION}." "v$SUGGESTED_VERSION"
     git push origin --tags
