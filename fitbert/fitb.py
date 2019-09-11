@@ -63,7 +63,7 @@ class FitBert:
             .list()
         )
 
-        tens = torch.LongTensor(input_ids).to(self.device)
+        tens = torch.tensor(input_ids).to(self.device)
         with torch.no_grad():
             preds = self.bert(tens)
             probs = self.softmax(preds)
@@ -100,7 +100,7 @@ class FitBert:
         tokens += self.tokenizer.tokenize(post) + ["[SEP]"]
 
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-        tens = torch.LongTensor(input_ids).unsqueeze(0)
+        tens = torch.tensor(input_ids).unsqueeze(0)
         tens = tens.to(self.device)
         with torch.no_grad():
             preds = self.bert(tens)
@@ -133,7 +133,7 @@ class FitBert:
         )
 
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-        tens = torch.LongTensor(input_ids).unsqueeze(0)
+        tens = torch.tensor(input_ids).unsqueeze(0)
         tens = tens.to(self.device)
         with torch.no_grad():
             preds = self.bert(tens)
@@ -213,7 +213,14 @@ class FitBert:
         options: List[str],
         delemmatize: bool = False,
         with_prob: bool = False,
-    ) -> List[str]:
+    ):
+        """
+        Rank a list of candidates
+
+        returns: Either a List of strings,
+        or if `with_prob` is True, a Tuple of List[str], List[float]
+
+        """
 
         options = seq(options).distinct().list()
 
@@ -221,7 +228,7 @@ class FitBert:
             options = seq(self._delemmatize_options(options)).distinct().list()
 
         if seq(options).len() == 1:
-            return options.list()
+            return options
 
         options, sent, start_words, end_words = self._simplify_options(sent, options)
 
