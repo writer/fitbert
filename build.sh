@@ -1,8 +1,8 @@
 #!/bin/bash
 
 NOW="$(date +'%B %d, %Y')"
-BASE_STRING=`cat VERSION`
-BASE_LIST=(`echo $BASE_STRING | tr '.' ' '`)
+BASE_STRING=$(cat VERSION)
+BASE_LIST=($(echo "$BASE_STRING" | tr '.' ' '))
 V_MAJOR=${BASE_LIST[0]}
 V_MINOR=${BASE_LIST[1]}
 V_PATCH=${BASE_LIST[2]}
@@ -20,7 +20,7 @@ update_deps ()
 
 bump_version ()
 {
-    echo $SUGGESTED_VERSION > VERSION
+    echo "$SUGGESTED_VERSION" > VERSION
 }
 
 update_changelog ()
