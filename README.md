@@ -11,11 +11,17 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 
 ## Installation
 
-**This software is currently unlicensed. If you do not work at Qordoba, you are not able to legally use it.** However, we are working to make it available, probably under Apache 2.0. It will be available as a PyPi package.
+## License
+
+This software is distributed under the Apache 2.0 license, except for the WordNet lemma data used for delemmatization, which is distributed with its original license, which is located in `./fitbert/data/LICENSE`.
+
+## From PyPi
+
+`pip install fitbert`
 
 ## Usage
 
-[A Jupyter notebook with a short introduction is available here.](https://colab.research.google.com/drive/1NHYRMR7pKt9uY_KfFhIKXwPwvuX-VQLW)
+[A Jupyter notebook with a short introduction is available here.](https://colab.research.google.com/drive/1NHYRMR7pKt9uY_KfFhIKXwPwvuX-VQLW) - Note, this doesn't seem to work for people not in the Qordoba GSuite Organization. For now I have just been granting access as people request it, but that doesn't scale.
 
 FitBert will automatically use GPU if `torch.cuda.is_available()`. Which is a good thing, because CPU inference time is really bad:
 
