@@ -21,7 +21,7 @@ This software is distributed under the Apache 2.0 license, except for the WordNe
 
 ## Usage
 
-[A Jupyter notebook with a short introduction is available here.](https://colab.research.google.com/drive/1NHYRMR7pKt9uY_KfFhIKXwPwvuX-VQLW) - Note, this doesn't seem to work for people not in the Qordoba GSuite Organization. For now I have just been granting access as people request it, but that doesn't scale.
+[A Jupyter notebook with a short introduction is available here.](https://colab.research.google.com/drive/1WrYzy9l_arpnTlhCCKViiilPe4WKZJjq)
 
 FitBert will automatically use GPU if `torch.cuda.is_available()`. Which is a good thing, because CPU inference time is really bad:
 
