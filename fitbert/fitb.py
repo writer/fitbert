@@ -5,7 +5,13 @@ import torch
 from fitbert.delemmatize import Delemmatizer
 from fitbert.utils import mask as _mask
 from functional import pseq, seq
-from transformers import BertForMaskedLM, BertTokenizer, DistilBertForMaskedLM, DistilBertTokenizer
+from transformers import (
+    BertForMaskedLM,
+    BertTokenizer,
+    DistilBertForMaskedLM,
+    DistilBertTokenizer,
+)
+
 
 class FitBert:
     def __init__(
@@ -29,6 +35,7 @@ class FitBert:
                 self.bert = DistilBertForMaskedLM.from_pretrained(model_name)
             else:
                 self.bert = BertForMaskedLM.from_pretrained(model_name)
+            self.bert.to(self.device)
         else:
             self.bert = model
 
@@ -39,8 +46,7 @@ class FitBert:
                 self.tokenizer = BertTokenizer.from_pretrained(model_name)
         else:
             self.tokenizer = tokenizer
-                    
-        self.bert.to(self.device)
+
         self.bert.eval()
 
     @staticmethod
