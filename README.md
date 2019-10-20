@@ -37,8 +37,8 @@ Here is what GPU inference times are looking like
 from fitbert import FitBert
 
 
-# in theory you can pass a model_name and tokenizer, but currently only
-# bert-large-uncased and BertTokenizer are available
+# in theory you can pass a model_name and tokenizer
+# currently supported models: bert-large-uncased and distilbert-base-uncased
 # this takes a while and loads a whole big BERT into memory
 fb = FitBert()
 
@@ -71,11 +71,12 @@ filled_in = fb.fitb(masked_string, options=options)
 filled_in = fb.fitb(masked_string, options=options, delemmatize=True)
 ```
 
-If you are already using `pytorch_pretrained_bert.BertForMaskedLM`, and have an instance of BertForMaskedLM already instantiated, you can pass pass it in to reuse it:
+If you are already using `pytorch_pretrained_bert.BertForMaskedLM`, or `transformers.BertForMaskedLM` and have an instance of BertForMaskedLM already instantiated, you can pass pass it in to reuse it:
 
 ```python
 BLM = pytorch_pretrained_bert.BertForMaskedLM.from_pretrained(model_name)
-
+# or
+BLM = transfomers.BertForMaskedLM.from_pretrained(model_name)
 fb = FitBert(model=BLM)
 ```
 
