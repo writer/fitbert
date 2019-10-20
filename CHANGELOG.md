@@ -1,3 +1,12 @@
+## 0.6.0 (October 20, 2019)
+  - Bump version to 0.5.0.
+  - Merge pull request #14 from Qordobacode/ENG-5767--replace-bert-model-by-distillbert
+  - fix
+  - add distillbert support
+  - Merge pull request #13 from samhavens/patch-1
+  - Update README.md
+  - Bump version to 0.5.0.
+
 ## 0.5.0 (October 20, 2019)
   - Merge pull request #14 from Qordobacode/ENG-5767--replace-bert-model-by-distillbert
   - fix
