@@ -1,3 +1,6 @@
+## 0.7.0 (December 12, 2019)
+
+
 ## 0.6.0 (December 12, 2019)
   - Merge branch 'master' of github.com:Qordobacode/fitbert
   - Merge pull request #15 from Qordobacode/update-license-setup
