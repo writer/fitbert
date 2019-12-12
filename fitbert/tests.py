@@ -44,7 +44,7 @@ def test_masker_works_without_instantiating():
 
 @pytest.mark.slow
 def test_ranking():
-    fb = FitBert()
+    fb = FitBert(model_name="distilbert-base-uncased")
     assert callable(fb.fitb)
 
     sentences = [

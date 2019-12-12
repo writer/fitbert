@@ -5,7 +5,12 @@ import torch
 from fitbert.delemmatize import Delemmatizer
 from fitbert.utils import mask as _mask
 from functional import pseq, seq
-from pytorch_pretrained_bert import BertForMaskedLM, tokenization
+from transformers import (
+    BertForMaskedLM,
+    BertTokenizer,
+    DistilBertForMaskedLM,
+    DistilBertTokenizer,
+)
 
 
 class FitBert:
@@ -24,15 +29,24 @@ class FitBert:
         )
         print("using model:", model_name)
         print("device:", self.device)
+
         if not model:
-            self.bert = BertForMaskedLM.from_pretrained(model_name)
+            if "distilbert" in model_name:
+                self.bert = DistilBertForMaskedLM.from_pretrained(model_name)
+            else:
+                self.bert = BertForMaskedLM.from_pretrained(model_name)
             self.bert.to(self.device)
         else:
             self.bert = model
+
         if not tokenizer:
-            self.tokenizer = tokenization.BertTokenizer.from_pretrained(model_name)
+            if "distilbert" in model_name:
+                self.tokenizer = DistilBertTokenizer.from_pretrained(model_name)
+            else:
+                self.tokenizer = BertTokenizer.from_pretrained(model_name)
         else:
             self.tokenizer = tokenizer
+
         self.bert.eval()
 
     @staticmethod
@@ -65,7 +79,7 @@ class FitBert:
 
         tens = torch.tensor(input_ids).to(self.device)
         with torch.no_grad():
-            preds = self.bert(tens)
+            preds = self.bert(tens)[0]
             probs = self.softmax(preds)
             tokens_ids = self.tokenizer.convert_tokens_to_ids(tokens)
             prob = (
@@ -103,7 +117,7 @@ class FitBert:
         tens = torch.tensor(input_ids).unsqueeze(0)
         tens = tens.to(self.device)
         with torch.no_grad():
-            preds = self.bert(tens)
+            preds = self.bert(tens)[0]
             probs = self.softmax(preds)
 
             pred_top = torch.topk(probs[0, target_idx], n)
@@ -136,7 +150,7 @@ class FitBert:
         tens = torch.tensor(input_ids).unsqueeze(0)
         tens = tens.to(self.device)
         with torch.no_grad():
-            preds = self.bert(tens)
+            preds = self.bert(tens)[0]
             probs = self.softmax(preds)
 
             ranked_pairs = (

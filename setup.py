@@ -32,7 +32,7 @@ setup(
     author_email="sam.havens@qordoba.com",
     url="https://github.com/Qordobacode/fitbert",
     version=__version__,
-    license="unlicensed",
+    license="Apache License 2.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=install_requires,
