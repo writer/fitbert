@@ -150,4 +150,4 @@ Run tests with `python -m pytest` or `python -m pytest -m "not slow"` to skip th
 
 ### Acknowledgement
 
-I am trying to get in touch with [NodoBird](https://drawception.com/player/546330/nodo-bird/), the artist of the fantastic portrait of Bert depicted above.
+Thanks to [NodoBird](https://instagram.com/nodobird?igshid=lqt5h1uicxsy) for letting us use the awesome portrait of Bert depicted above.
