@@ -31,7 +31,6 @@ FitBert will automatically use GPU if `torch.cuda.is_available()`. Or when you i
 from fitbert import FitBert
 
 
-# in theory you can pass a model_name and tokenizer
 # currently supported models: bert-large-uncased and distilbert-base-uncased
 # this takes a while and loads a whole big BERT into memory
 fb = FitBert()
