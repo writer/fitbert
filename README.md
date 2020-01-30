@@ -9,6 +9,8 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 3. That service passes the segment of text, with the words to be replaced identified, and the list of suggestions
 4. FitBert _crushes_ all but the best suggestion :muscle:
 
+[Blog post walkthrough](https://medium.com/@samhavens/introducing-fitbert-4b047af860fd)
+
 ## Installation
 
 ## License
