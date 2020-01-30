@@ -23,13 +23,7 @@ This software is distributed under the Apache 2.0 license, except for the WordNe
 
 [A Jupyter notebook with a short introduction is available here.](https://colab.research.google.com/drive/1WrYzy9l_arpnTlhCCKViiilPe4WKZJjq)
 
-FitBert will automatically use GPU if `torch.cuda.is_available()`. Which is a good thing, because CPU inference time is really bad:
-
-![cpu inference time chart showing roughly 1 prediction per second](https://imgur.com/3u1U9P8.png)
-
-Here is what GPU inference times are looking like
-
-![gpu inference time chart showing roughly 100x speedup over CPU to approximately 100 per second](https://imgur.com/aEUmJXn.png)
+FitBert will automatically use GPU if `torch.cuda.is_available()`. Or when you instantiate it, you can pass `FitBert(model_name="distilbert-base-uncased", disable_gpu=True)`. Fastest batches are using distilbert on CPU with batch size one, maximum throughput is with GPU and larger batches.
 
 ### Usage as a library / in a server
 
