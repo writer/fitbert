@@ -27,16 +27,17 @@ class FitBert:
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() and not disable_gpu else "cpu"
         )
-        print("using model:", model_name)
         print("device:", self.device)
 
         if not model:
+            print("using model:", model_name)
             if "distilbert" in model_name:
                 self.bert = DistilBertForMaskedLM.from_pretrained(model_name)
             else:
                 self.bert = BertForMaskedLM.from_pretrained(model_name)
             self.bert.to(self.device)
         else:
+            print("using custom model:", model.config.architectures)
             self.bert = model
             self.bert.to(self.device)
             
