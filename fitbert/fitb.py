@@ -38,7 +38,8 @@ class FitBert:
             self.bert.to(self.device)
         else:
             self.bert = model
-
+            self.bert.to(self.device)
+            
         if not tokenizer:
             if "distilbert" in model_name:
                 self.tokenizer = DistilBertTokenizer.from_pretrained(model_name)
