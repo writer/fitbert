@@ -9,6 +9,8 @@ FitBert ((F)ill (i)n (t)he blanks, (BERT)) is a library for using [BERT](https:/
 3. That service passes the segment of text, with the words to be replaced identified, and the list of suggestions
 4. FitBert _crushes_ all but the best suggestion :muscle:
 
+[Blog post walkthrough](https://medium.com/@samhavens/introducing-fitbert-4b047af860fd)
+
 ## Installation
 
 ## License
@@ -23,13 +25,7 @@ This software is distributed under the Apache 2.0 license, except for the WordNe
 
 [A Jupyter notebook with a short introduction is available here.](https://colab.research.google.com/drive/1WrYzy9l_arpnTlhCCKViiilPe4WKZJjq)
 
-FitBert will automatically use GPU if `torch.cuda.is_available()`. Which is a good thing, because CPU inference time is really bad:
-
-![cpu inference time chart showing roughly 1 prediction per second](https://imgur.com/3u1U9P8.png)
-
-Here is what GPU inference times are looking like
-
-![gpu inference time chart showing roughly 100x speedup over CPU to approximately 100 per second](https://imgur.com/aEUmJXn.png)
+FitBert will automatically use GPU if `torch.cuda.is_available()`. Or when you instantiate it, you can pass `FitBert(model_name="distilbert-base-uncased", disable_gpu=True)`. Fastest batches are using distilbert on CPU with batch size one, maximum throughput is with GPU and larger batches.
 
 ### Usage as a library / in a server
 
@@ -37,7 +33,6 @@ Here is what GPU inference times are looking like
 from fitbert import FitBert
 
 
-# in theory you can pass a model_name and tokenizer
 # currently supported models: bert-large-uncased and distilbert-base-uncased
 # this takes a while and loads a whole big BERT into memory
 fb = FitBert()
@@ -150,4 +145,4 @@ Run tests with `python -m pytest` or `python -m pytest -m "not slow"` to skip th
 
 ### Acknowledgement
 
-I am trying to get in touch with [NodoBird](https://drawception.com/player/546330/nodo-bird/), the artist of the fantastic portrait of Bert depicted above.
+Thanks to [NodoBird](https://instagram.com/nodobird?igshid=lqt5h1uicxsy) for letting us use the awesome portrait of Bert depicted above.
