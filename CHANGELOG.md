@@ -1,3 +1,13 @@
+## 0.9.0 (May 21, 2020)
+  - Merge branch 'master' of github.com:Qordobacode/fitbert
+  - Merge pull request #18 from JasonObeid/master
+  - change printing of custom model name
+  - Fix PyTorch device error when loading custom model
+  - Update README.md
+  - Update README.md
+  - Update README.md
+  - Update README.md
+
 ## 0.8.0 (December 12, 2019)
 
 
