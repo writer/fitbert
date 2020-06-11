@@ -146,3 +146,16 @@ Run tests with `python -m pytest` or `python -m pytest -m "not slow"` to skip th
 ### Acknowledgement
 
 Thanks to [NodoBird](https://instagram.com/nodobird?igshid=lqt5h1uicxsy) for letting us use the awesome portrait of Bert depicted above.
+
+## Citing
+
+If you use FitBERT in your research, please cite with the following BibText
+
+```bibtext
+@misc{havens2019fitbert,
+    title  = {Use BERT to Fill in the Blanks},
+    author = {Sam Havens and Melisa Stahl},
+    url    = {https://github.com/Qordobacode/fitbert},
+    year   = {2019}
+}
+```
