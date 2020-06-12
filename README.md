@@ -154,7 +154,7 @@ If you use FitBERT in your research, please cite with the following BibText
 ```bibtext
 @misc{havens2019fitbert,
     title  = {Use BERT to Fill in the Blanks},
-    author = {Sam Havens and Melisa Stahl},
+    author = {Sam Havens and Aneta Stal},
     url    = {https://github.com/Qordobacode/fitbert},
     year   = {2019}
 }
