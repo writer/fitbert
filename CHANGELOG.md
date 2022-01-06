@@ -1,3 +1,10 @@
+## 0.10.0 (January 06, 2022)
+  - Merge branch 'master' of github.com:writerai/fitbert
+  - Merge pull request #23 from sturmianseq/FixRedundancy
+  - Remove redundancy in delems in delemmatize
+  - update me
+  - add bibtext
+
 ## 0.9.0 (May 21, 2020)
   - Merge branch 'master' of github.com:Qordobacode/fitbert
   - Merge pull request #18 from JasonObeid/master
